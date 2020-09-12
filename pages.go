@@ -1,14 +1,14 @@
 package main
 
 import (
-        "html/template"
-        "net/http"
-        "log"
-        "strconv"
-      )
+	"html/template"
+	"log"
+	"net/http"
+	"strconv"
+)
 
 func renderQr(w http.ResponseWriter, item trackedItem, number int) {
-        const tpl = `
+	const tpl = `
     <!DOCTYPE html>
     <html>
         <head>
@@ -20,27 +20,26 @@ func renderQr(w http.ResponseWriter, item trackedItem, number int) {
             <img src="{{.QrUrl}}">
         </body>
     </html>`
-    t, err := template.New("webpage").Parse(tpl)
-    checkError(err)
-    id := strconv.Itoa(number)
-    model := struct {
-      Url template.URL
-      QrUrl template.URL
-      Item trackedItem
-    }{
-      Url: template.URL("http://" + base + "/" + id),
-      QrUrl: template.URL("http://" + base + "/qrpng/" + id),
-      Item: item,
-    }
+	t, err := template.New("webpage").Parse(tpl)
+	checkError(err)
+	id := strconv.Itoa(number)
+	model := struct {
+		Url   template.URL
+		QrUrl template.URL
+		Item  trackedItem
+	}{
+		Url:   template.URL(base + "/" + id),
+		QrUrl: template.URL(base + "/qrpng/" + id),
+		Item:  item,
+	}
 
-    err = t.Execute(w, model)
-    checkError(err)
+	err = t.Execute(w, model)
+	checkError(err)
 
 }
 
-
 func renderReportingPage(w http.ResponseWriter, id string) {
-        const tpl = `
+	const tpl = `
     <!DOCTYPE html>
     <html>
         <head>
@@ -55,20 +54,20 @@ func renderReportingPage(w http.ResponseWriter, id string) {
           </form> 
         </body>
     </html>`
-    t, err := template.New("webpage").Parse(tpl)
-    checkError(err)
-    model := struct {
-      Id string
-    }{
-      Id: id,
-    }
+	t, err := template.New("webpage").Parse(tpl)
+	checkError(err)
+	model := struct {
+		Id string
+	}{
+		Id: id,
+	}
 
-    err = t.Execute(w, model)
-    checkError(err)
+	err = t.Execute(w, model)
+	checkError(err)
 }
 
 func checkError(err error) {
-    if err != nil {
-        log.Fatal(err)
-    }
+	if err != nil {
+		log.Fatal(err)
+	}
 }

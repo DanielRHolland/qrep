@@ -1,20 +1,21 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
+	"encoding/json"
+	"image/png"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
-	"io"
-        "io/ioutil"
-        "encoding/json"
-        "strconv"
-        "github.com/boombuler/barcode"
+
+	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/qr"
-        "image/png"
+	"github.com/gorilla/mux"
 )
 
-const base = "127.0.0.1:9100"
+const base = "http://127.0.0.1:9100"
 
 var trackedItems []trackedItem
 
@@ -23,64 +24,64 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 type trackedItem struct {
-        Name string
+	Name string
 }
 
 //POST create new qrcode
 func createQr(w http.ResponseWriter, r *http.Request) {
-        reqBody, _ := ioutil.ReadAll(r.Body)
-        var item trackedItem
-        json.Unmarshal(reqBody, &item)
-        key := len(trackedItems)
-        trackedItems = append(trackedItems, item)
-        itemUri := base + "/qr/" + string(key)
-        json.NewEncoder(w).Encode(itemUri)
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	var item trackedItem
+	json.Unmarshal(reqBody, &item)
+	key := len(trackedItems)
+	trackedItems = append(trackedItems, item)
+	itemUri := base + "/qr/" + string(key)
+	json.NewEncoder(w).Encode(itemUri)
 }
 
 //GET qr code page for id
 func serveQr(w http.ResponseWriter, r *http.Request) {
-        vars := mux.Vars(r)
-        key := vars["id"]
-        i, _ := strconv.Atoi(key) //need err checker
-        if len(trackedItems) > i && i >= 0 {
-//            io.WriteString(w, trackedItems[i].Name)
-            renderQr(w, trackedItems[i], i)
-        } else {
-        io.WriteString(w, "NOPE")
-      }
+	vars := mux.Vars(r)
+	key := vars["id"]
+	i, _ := strconv.Atoi(key) //need err checker
+	if len(trackedItems) > i && i >= 0 {
+		//            io.WriteString(w, trackedItems[i].Name)
+		renderQr(w, trackedItems[i], i)
+	} else {
+		io.WriteString(w, "NOPE")
+	}
 }
 
 //GET qr code png for id
 
 func serveQrPng(w http.ResponseWriter, r *http.Request) {
-        vars := mux.Vars(r)
-        url := "http://"+base+"/"+vars["id"]
-        qrCode, _ := qr.Encode(url, qr.M, qr.Auto)
+	vars := mux.Vars(r)
+	url := base + "/" + vars["id"]
+	qrCode, _ := qr.Encode(url, qr.M, qr.Auto)
 	qrCode, _ = barcode.Scale(qrCode, 256, 256)
 	png.Encode(w, qrCode)
 }
 
 //GET reporting page for item
 func serveReportingPage(w http.ResponseWriter, r *http.Request) {
-        vars := mux.Vars(r)
-        key := vars["id"]
-        renderReportingPage(w, key)
+	vars := mux.Vars(r)
+	key := vars["id"]
+	renderReportingPage(w, key)
 
 }
+
 //POST new report
 func newReportPosted(w http.ResponseWriter, r *http.Request) {
-        r.ParseForm() //should err check here
-        log.Println(r.Form)
-        io.WriteString(w, "Issue: "+r.Form.Get("issue"))
+	r.ParseForm() //should err check here
+	io.WriteString(w, "Issue: "+r.Form.Get("issue"))
 }
 
 // Route declaration
 func router() *mux.Router {
 	r := mux.NewRouter()
 	r.HandleFunc("/", handler)
-        r.HandleFunc("/qr", createQr).Methods("POST")
-        r.HandleFunc("/qr/{id}", serveQr)
-        r.HandleFunc("/qrpng/{id}", serveQrPng)
+	r.HandleFunc("/qr", createQr).Methods("POST")
+	r.HandleFunc("/qr/{id}", serveQr)
+	r.HandleFunc("/qrpng/{id}", serveQrPng)
 	r.HandleFunc("/{id}", newReportPosted).Methods("POST")
 	r.HandleFunc("/{id}", serveReportingPage)
 	return r
@@ -90,8 +91,8 @@ func router() *mux.Router {
 func main() {
 	router := router()
 	srv := &http.Server{
-		Handler: router,
-		Addr:    base,
+		Handler:      router,
+		Addr:         base,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
