@@ -71,8 +71,8 @@ func serveReportingPage(w http.ResponseWriter, r *http.Request) {
 
 //POST new report
 func newReportPosted(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm() //should err check here
-	io.WriteString(w, "Issue: "+r.Form.Get("issue"))
+        r.ParseForm() //should err check here
+        io.WriteString(w, "Issue: "+r.Form.Get("issue"))
 }
 
 // Route declaration
