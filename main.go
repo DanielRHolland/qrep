@@ -2,6 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/boombuler/barcode"
+	"github.com/boombuler/barcode/qr"
+	"github.com/gorilla/mux"
 	"image/png"
 	"io"
 	"io/ioutil"
@@ -9,33 +12,44 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/boombuler/barcode"
-	"github.com/boombuler/barcode/qr"
-	"github.com/gorilla/mux"
 )
 
-const base = "http://127.0.0.1:9100"
+const addr = "127.0.0.1:9100"
+const base = "http://" + addr
 
 var trackedItems []trackedItem
+var itemlessIssues []string
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "Hello, world!\n")
 }
 
 type trackedItem struct {
-	Name string
+	Name   string
+	Issues []string
 }
 
 //POST create new qrcode
 func createQr(w http.ResponseWriter, r *http.Request) {
-	reqBody, _ := ioutil.ReadAll(r.Body)
 	var item trackedItem
-	json.Unmarshal(reqBody, &item)
+	if r.Header.Get("Content-Type") == "application/x-www-form-urlencoded" {
+		err := r.ParseForm()
+		checkError(err)
+		item.Name = r.Form.Get("name")
+	} else if r.Header.Get("Content-Type") == "application/json" {
+		log.Println(r.Header)
+		reqBody, err := ioutil.ReadAll(r.Body)
+		checkError(err)
+		json.Unmarshal(reqBody, &item)
+	}
 	key := len(trackedItems)
 	trackedItems = append(trackedItems, item)
-	itemUri := base + "/qr/" + string(key)
-	json.NewEncoder(w).Encode(itemUri)
+	renderQr(w, item, key)
+}
+
+//GET qrCreation page
+func serveCreationPage(w http.ResponseWriter, r *http.Request) {
+	renderCreationPage(w)
 }
 
 //GET qr code page for id
@@ -62,17 +76,40 @@ func serveQrPng(w http.ResponseWriter, r *http.Request) {
 }
 
 //GET reporting page for item
-func serveReportingPage(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	key := vars["id"]
-	renderReportingPage(w, key)
-
+func serveReportingPage(w http.ResponseWriter, _ *http.Request) {
+	renderReportingPage(w)
 }
 
 //POST new report
 func newReportPosted(w http.ResponseWriter, r *http.Request) {
-        r.ParseForm() //should err check here
-        io.WriteString(w, "Issue: "+r.Form.Get("issue"))
+	r.ParseForm() //should err check here
+	vars := mux.Vars(r)
+	id := vars["id"]
+	key, err := strconv.Atoi(id)
+	issue := r.Form.Get("issue")
+	if err != nil || len(trackedItems) <= key || key < 0 {
+		itemlessIssues = append(itemlessIssues, issue)
+	} else {
+		issuesLog := &trackedItems[key].Issues
+		*issuesLog = append(*issuesLog, issue)
+	}
+	io.WriteString(w, thanksForReport)
+}
+
+func serveItemReportLog(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	key, err := strconv.Atoi(id)
+	checkError(err)
+	if len(trackedItems) > key && key >= 0 {
+		renderItemReportLog(w, trackedItems[key])
+	} else {
+		io.WriteString(w, "NOPE")
+	}
+}
+
+func serveReportLog(w http.ResponseWriter, _ *http.Request) {
+	renderReportLog(w, trackedItems, itemlessIssues)
 }
 
 // Route declaration
@@ -80,8 +117,11 @@ func router() *mux.Router {
 	r := mux.NewRouter()
 	r.HandleFunc("/", handler)
 	r.HandleFunc("/qr", createQr).Methods("POST")
+	r.HandleFunc("/qr", serveCreationPage)
 	r.HandleFunc("/qr/{id}", serveQr)
 	r.HandleFunc("/qrpng/{id}", serveQrPng)
+	r.HandleFunc("/reports/{id}", serveItemReportLog)
+	r.HandleFunc("/reports", serveReportLog)
 	r.HandleFunc("/{id}", newReportPosted).Methods("POST")
 	r.HandleFunc("/{id}", serveReportingPage)
 	return r
@@ -92,7 +132,7 @@ func main() {
 	router := router()
 	srv := &http.Server{
 		Handler:      router,
-		Addr:         base,
+		Addr:         addr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
