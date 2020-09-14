@@ -55,19 +55,17 @@ func imageCard(title string, image string, content string) string {
 //              <a href="#">` + link + `</a>
 func renderQr(w http.ResponseWriter, item trackedItem, number int) {
 	var tpl = header +
-		imageCard("{{.Item.Name}}", "{{.QrUrl}}", "<a href='{{.Url}}'>{{.Url}}</a>") +
+		imageCard("{{.Item.Name}}", "/qrpng/{{.Id}}", "<a href='/{{.Id}}'>{{.Id}}</a>") +
 		footer
 	t, err := template.New("webpage").Parse(tpl)
 	checkError(err)
-	id := strconv.Itoa(number)
+	id := strconv.Itoa(number)//add error checking
 	model := struct {
-		Url   template.URL
-		QrUrl template.URL
-		Item  trackedItem
+		Id    string
+                Item  trackedItem
 	}{
-		Url:   template.URL(base + "/" + id),
-		QrUrl: template.URL(base + "/qrpng/" + id),
-		Item:  item,
+                Id:    id,
+                Item:  item,
 	}
 
 	err = t.Execute(w, model)
@@ -113,7 +111,7 @@ func renderCreationPage(w http.ResponseWriter) {
 
 func renderItemReportLog(w http.ResponseWriter, item trackedItem) {
 	const tpl = header + `
-        <h2>Reports for: {{.Name}}</h2>
+        <h2>Reports for {{.Name}}</h2>
         <ul>
           {{range .Issues}}
               <li> {{.}} </li>
@@ -129,10 +127,10 @@ func renderItemReportLog(w http.ResponseWriter, item trackedItem) {
 
 func renderReportLog(w http.ResponseWriter, trackedItems []trackedItem, itemlessIssues []string) {
 	const tpl = header + `
-        {{range .TrackedItems}}
-        <h4>Reports for {{.Name}}</h4>
+        {{range $i, $elem := .TrackedItems}}
+        <h4><a href="/reports/{{$i}}">Reports for {{$elem.Name}}</a></h4>
         <ul>
-          {{range .Issues}}
+          {{range $elem.Issues}}
               <li> {{.}} </li>
           {{end}}
         </ul>
