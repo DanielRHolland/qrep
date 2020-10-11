@@ -59,13 +59,13 @@ func renderQr(w http.ResponseWriter, item trackedItem, number int) {
 		footer
 	t, err := template.New("webpage").Parse(tpl)
 	checkError(err)
-	id := strconv.Itoa(number)//add error checking
+	id := strconv.Itoa(number) //add error checking
 	model := struct {
-		Id    string
-                Item  trackedItem
+		Id   string
+		Item trackedItem
 	}{
-                Id:    id,
-                Item:  item,
+		Id:   id,
+		Item: item,
 	}
 
 	err = t.Execute(w, model)

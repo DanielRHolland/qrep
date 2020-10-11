@@ -25,8 +25,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 type trackedItem struct {
-	Name   string
-	Issues []string
+	Name   string   `json:"name"`
+	Issues []string `json:"issues"`
 }
 
 //POST create new qrcode
@@ -129,7 +129,7 @@ func router() *mux.Router {
 
 // Initiate web server
 func main() {
-	router := router()
+        router := router()
 	srv := &http.Server{
 		Handler:      router,
 		Addr:         addr,
