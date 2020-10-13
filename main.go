@@ -10,15 +10,14 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 )
 
 const addr = "127.0.0.1:9100"
 const base = "http://" + addr
 
-var trackedItems []trackedItem
-var itemlessIssues []string
+//var trackedItems []trackedItem
+//var itemlessIssues []string
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "Hello, world!\n")
@@ -27,6 +26,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 type trackedItem struct {
 	Name   string   `json:"name"`
 	Issues []string `json:"issues"`
+        
 }
 
 //POST create new qrcode
@@ -42,8 +42,10 @@ func createQr(w http.ResponseWriter, r *http.Request) {
 		checkError(err)
 		json.Unmarshal(reqBody, &item)
 	}
-	key := len(trackedItems)
-	trackedItems = append(trackedItems, item)
+        if item.Issues == nil {
+          item.Issues = []string{}
+        }
+        key := insertItem(item)
 	renderQr(w, item, key)
 }
 
@@ -55,11 +57,10 @@ func serveCreationPage(w http.ResponseWriter, r *http.Request) {
 //GET qr code page for id
 func serveQr(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	key := vars["id"]
-	i, _ := strconv.Atoi(key) //need err checker
-	if len(trackedItems) > i && i >= 0 {
+	id := vars["id"]
+        if item, err := getItem(id); err == nil  { // qr
 		//            io.WriteString(w, trackedItems[i].Name)
-		renderQr(w, trackedItems[i], i)
+		renderQr(w, item, id)
 	} else {
 		io.WriteString(w, "NOPE")
 	}
@@ -84,32 +85,42 @@ func serveReportingPage(w http.ResponseWriter, _ *http.Request) {
 func newReportPosted(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm() //should err check here
 	vars := mux.Vars(r)
-	id := vars["id"]
-	key, err := strconv.Atoi(id)
+	id, exists := vars["id"]
+
 	issue := r.Form.Get("issue")
-	if err != nil || len(trackedItems) <= key || key < 0 {
-		itemlessIssues = append(itemlessIssues, issue)
-	} else {
-		issuesLog := &trackedItems[key].Issues
-		*issuesLog = append(*issuesLog, issue)
+        
+        if exists {
+//                itemExists := false 
+                //
+//        } else {
+                
+//        }
+
+//	if exists && itemExists  { // If 
+                //Add new issue to the item with the id
+                addIssueToItem(issue, id)
+//	} else {
+                //Insert new issue into itemlessIssues
 	}
 	io.WriteString(w, thanksForReport)
 }
 
 func serveItemReportLog(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
-	key, err := strconv.Atoi(id)
-	checkError(err)
-	if len(trackedItems) > key && key >= 0 {
-		renderItemReportLog(w, trackedItems[key])
-	} else {
-		io.WriteString(w, "NOPE")
-	}
+	id, varPresent := vars["id"] //returns id
+        if varPresent { 
+            if item, err := getItem(id); err == nil { 
+                    renderItemReportLog(w, item)
+            } else {
+                    io.WriteString(w, "NOPE")
+            }
+        }
 }
 
 func serveReportLog(w http.ResponseWriter, _ *http.Request) {
-	renderReportLog(w, trackedItems, itemlessIssues)
+        var trackedItems []trackedItem //get tracked items
+        var itemlessIssues []string // get itemless Issues
+        renderReportLog(w, trackedItems, itemlessIssues)
 }
 
 // Route declaration

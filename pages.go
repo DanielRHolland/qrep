@@ -5,7 +5,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 const header = `
@@ -53,13 +52,13 @@ func imageCard(title string, image string, content string) string {
 //<div class="row">
 //  <div class="col s12 m6 offset-m6">
 //              <a href="#">` + link + `</a>
-func renderQr(w http.ResponseWriter, item trackedItem, number int) {
+func renderQr(w http.ResponseWriter, item trackedItem, id string) {
 	var tpl = header +
 		imageCard("{{.Item.Name}}", "/qrpng/{{.Id}}", "<a href='/{{.Id}}'>{{.Id}}</a>") +
 		footer
 	t, err := template.New("webpage").Parse(tpl)
 	checkError(err)
-	id := strconv.Itoa(number) //add error checking
+//	id := strconv.Itoa(number) //add error checking
 	model := struct {
 		Id   string
 		Item trackedItem
