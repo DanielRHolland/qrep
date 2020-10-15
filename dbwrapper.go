@@ -65,7 +65,7 @@ func getItem(id string) (trackedItem, error) {
         return item, err
 }
 
-func addIssueToItem(issue string, id string) {
+func addIssueToItem(issue string, id string) error {
         objectId, _ := primitive.ObjectIDFromHex(id)
         ctx, client := connectdb()
         defer client.Disconnect(ctx)
@@ -78,7 +78,30 @@ func addIssueToItem(issue string, id string) {
         }else{
         fmt.Println("success")
         }
+        return err
 
 
+}
+
+
+func getTrackedItems(maxcount int) ([]trackedItem, error) {
+        ctx, client := connectdb()
+        defer client.Disconnect(ctx)
+        collection := client.Database(dbname).Collection(itemsCollection)
+        var items []trackedItem
+        cursor, err := collection.Find(ctx, bson.M{})
+        defer cursor.Close(ctx)
+        for cursor.Next(ctx) {
+            var item trackedItem
+            if err = cursor.Decode(&item); err != nil {
+                log.Fatal(err)
+            } else {
+                items = append(items, item)
+            }
+        }
+        if err != nil {
+            log.Fatal(err)
+        }
+        return items, err
 
 }

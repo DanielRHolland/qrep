@@ -52,9 +52,9 @@ func imageCard(title string, image string, content string) string {
 //<div class="row">
 //  <div class="col s12 m6 offset-m6">
 //              <a href="#">` + link + `</a>
-func renderQr(w http.ResponseWriter, item trackedItem, id string) {
+func renderQr(w http.ResponseWriter, item trackedItem) {
 	var tpl = header +
-		imageCard("{{.Item.Name}}", "/qrpng/{{.Id}}", "<a href='/{{.Id}}'>{{.Id}}</a>") +
+		imageCard("{{.Item.Name}}", "/qrpng/{{.Item.Id}}", "<a href='/{{.Item.Id}}'>{{.Item.Id}}</a>") +
 		footer
 	t, err := template.New("webpage").Parse(tpl)
 	checkError(err)
@@ -63,7 +63,6 @@ func renderQr(w http.ResponseWriter, item trackedItem, id string) {
 		Id   string
 		Item trackedItem
 	}{
-		Id:   id,
 		Item: item,
 	}
 
@@ -126,10 +125,10 @@ func renderItemReportLog(w http.ResponseWriter, item trackedItem) {
 
 func renderReportLog(w http.ResponseWriter, trackedItems []trackedItem, itemlessIssues []string) {
 	const tpl = header + `
-        {{range $i, $elem := .TrackedItems}}
-        <h4><a href="/reports/{{$i}}">Reports for {{$elem.Name}}</a></h4>
+        {{range .TrackedItems}}
+        <h4><a href="/reports/{{.Id}}">Reports for {{.Name}}</a></h4>
         <ul>
-          {{range $elem.Issues}}
+          {{range .Issues}}
               <li> {{.}} </li>
           {{end}}
         </ul>

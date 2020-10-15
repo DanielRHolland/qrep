@@ -24,9 +24,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 type trackedItem struct {
-	Name   string   `json:"name"`
-	Issues []string `json:"issues"`
-        
+        Name   string   `json:"name" bson:"name"`
+        Issues []string `json:"issues" bson:"issues"`
+        Id     string   `json:"id" bson:"_id"`
 }
 
 //POST create new qrcode
@@ -45,8 +45,8 @@ func createQr(w http.ResponseWriter, r *http.Request) {
         if item.Issues == nil {
           item.Issues = []string{}
         }
-        key := insertItem(item)
-	renderQr(w, item, key)
+        item.Id = insertItem(item)
+	renderQr(w, item)
 }
 
 //GET qrCreation page
@@ -60,7 +60,7 @@ func serveQr(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
         if item, err := getItem(id); err == nil  { // qr
 		//            io.WriteString(w, trackedItems[i].Name)
-		renderQr(w, item, id)
+		renderQr(w, item)
 	} else {
 		io.WriteString(w, "NOPE")
 	}
@@ -118,9 +118,13 @@ func serveItemReportLog(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveReportLog(w http.ResponseWriter, _ *http.Request) {
-        var trackedItems []trackedItem //get tracked items
-        var itemlessIssues []string // get itemless Issues
-        renderReportLog(w, trackedItems, itemlessIssues)
+        trackedItems, err := getTrackedItems(100)  //get tracked items
+        if err == nil {
+            var itemlessIssues []string // get itemless Issues
+            renderReportLog(w, trackedItems, itemlessIssues)
+        } else {
+            io.WriteString(w, "NOPE")
+        }
 }
 
 // Route declaration
