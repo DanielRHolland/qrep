@@ -102,7 +102,7 @@ func newReportPosted(w http.ResponseWriter, r *http.Request) {
 //	} else {
                 //Insert new issue into itemlessIssues
 	}
-	io.WriteString(w, thanksForReport)
+        thanksForReport(w)
 }
 
 func serveItemReportLog(w http.ResponseWriter, r *http.Request) {
@@ -130,7 +130,7 @@ func serveReportLog(w http.ResponseWriter, _ *http.Request) {
 // Route declaration
 func router() *mux.Router {
 	r := mux.NewRouter()
-	r.HandleFunc("/", handler)
+	r.HandleFunc("/", dashboard)
 	r.HandleFunc("/qr", createQr).Methods("POST")
 	r.HandleFunc("/qr", serveCreationPage)
 	r.HandleFunc("/qr/{id}", serveQr)

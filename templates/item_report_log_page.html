@@ -1,0 +1,9 @@
+{{template "header.html"}}
+
+ <h2>Reports for {{.Name}}</h2>
+        <ul>
+          {{range .Issues}}
+              <li> {{.}} </li>
+          {{end}}
+        </ul>
+{{template "footer.html"}}

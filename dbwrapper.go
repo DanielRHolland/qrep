@@ -34,13 +34,13 @@ func connectdb() (context.Context, *mongo.Client) {
 }
 
 func insertTrackedItem(ctx context.Context, client *mongo.Client, item trackedItem) string {
+        item.Id = primitive.NewObjectID().Hex()
 	collection := client.Database(dbname).Collection(itemsCollection)
-	insertResult, err := collection.InsertOne(ctx, item)
+	_, err := collection.InsertOne(ctx, item)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Inserted trackedItem with ID:", insertResult.InsertedID)
-        return (insertResult).InsertedID.(primitive.ObjectID).Hex()
+        return item.Id
 }
 
 func insertItem(item trackedItem) string {
@@ -50,11 +50,10 @@ func insertItem(item trackedItem) string {
 }
 
 func getItem(id string) (trackedItem, error) {
-        objectId, _ := primitive.ObjectIDFromHex(id)
         ctx, client := connectdb()
         defer client.Disconnect(ctx)
         collection := client.Database(dbname).Collection(itemsCollection)
-        filter:= bson.M{"_id": objectId}
+        filter:= bson.M{"_id": id}
         var item trackedItem
         err := collection.FindOne(ctx, filter).Decode(&item)
         if err != nil {
@@ -66,11 +65,10 @@ func getItem(id string) (trackedItem, error) {
 }
 
 func addIssueToItem(issue string, id string) error {
-        objectId, _ := primitive.ObjectIDFromHex(id)
         ctx, client := connectdb()
         defer client.Disconnect(ctx)
         collection := client.Database(dbname).Collection(itemsCollection)
-        filter := bson.M{"_id": objectId}
+        filter := bson.M{"_id": id}
         update := bson.M{"$push":bson.M{"issues": issue}}
         _, err := collection.UpdateOne(ctx,filter,update)
         if err !=nil{
