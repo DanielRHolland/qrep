@@ -153,10 +153,14 @@ func router() *mux.Router {
 // Initiate web server
 func main() {
 	addrFlag := flag.String("addr", "127.0.0.1:9100", "Server Address:port")
+        baseFlag := flag.String("url",  "def", "URL") 
 	flag.Parse()
 	addr = *addrFlag
-	base = "http://" + addr
-	log.Println("Serving on " + addr)
+	base = *baseFlag
+        if base == "def" {
+            base = "http://" + addr
+        }
+	log.Println("Serving on " , base,"(",addr,")")
 	router := router()
 	srv := &http.Server{
 		Handler:      router,
