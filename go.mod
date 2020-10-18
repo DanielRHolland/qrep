@@ -1,4 +1,4 @@
-module danrh.co.uk/sum/qrep
+module github.com/DanielRHolland/qrep
 
 go 1.14
 
