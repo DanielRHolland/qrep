@@ -24,9 +24,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 type trackedItem struct {
-        Name   string   `json:"name" bson:"name"`
-        Issues []string `json:"issues" bson:"issues"`
-        Id     string   `json:"id" bson:"_id"`
+	Name   string   `json:"name" bson:"name"`
+	Issues []string `json:"issues" bson:"issues"`
+	Id     string   `json:"id" bson:"_id"`
 }
 
 //POST create new qrcode
@@ -42,11 +42,11 @@ func createQr(w http.ResponseWriter, r *http.Request) {
 		checkError(err)
 		json.Unmarshal(reqBody, &item)
 	}
-        if item.Issues == nil {
-          item.Issues = []string{}
-        }
-        item.Id = insertItem(item)
-	renderQr(w, item)
+	if item.Issues == nil {
+		item.Issues = []string{}
+	}
+	item.Id = insertItem(item)
+	serveDashboard(w, r)
 }
 
 //GET qrCreation page
@@ -58,7 +58,7 @@ func serveCreationPage(w http.ResponseWriter, r *http.Request) {
 func serveQr(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-        if item, err := getItem(id); err == nil  { // qr
+	if item, err := getItem(id); err == nil { // qr
 		//            io.WriteString(w, trackedItems[i].Name)
 		renderQr(w, item)
 	} else {
@@ -88,49 +88,59 @@ func newReportPosted(w http.ResponseWriter, r *http.Request) {
 	id, exists := vars["id"]
 
 	issue := r.Form.Get("issue")
-        
-        if exists {
-//                itemExists := false 
-                //
-//        } else {
-                
-//        }
 
-//	if exists && itemExists  { // If 
-                //Add new issue to the item with the id
-                addIssueToItem(issue, id)
-//	} else {
-                //Insert new issue into itemlessIssues
+	if exists {
+		//                itemExists := false
+		//
+		//        } else {
+
+		//        }
+
+		//	if exists && itemExists  { // If
+		//Add new issue to the item with the id
+		addIssueToItem(issue, id)
+		//	} else {
+		//Insert new issue into itemlessIssues
 	}
-        thanksForReport(w)
+	thanksForReport(w)
 }
 
 func serveItemReportLog(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, varPresent := vars["id"] //returns id
-        if varPresent { 
-            if item, err := getItem(id); err == nil { 
-                    renderItemReportLog(w, item)
-            } else {
-                    io.WriteString(w, "NOPE")
-            }
-        }
+	if varPresent {
+		if item, err := getItem(id); err == nil {
+			renderItemReportLog(w, item)
+		} else {
+			io.WriteString(w, "NOPE")
+		}
+	}
 }
 
 func serveReportLog(w http.ResponseWriter, _ *http.Request) {
-        trackedItems, err := getTrackedItems(100)  //get tracked items
-        if err == nil {
-            var itemlessIssues []string // get itemless Issues
-            renderReportLog(w, trackedItems, itemlessIssues)
-        } else {
-            io.WriteString(w, "NOPE")
-        }
+	trackedItems, err := getTrackedItems(100) //get tracked items
+	if err == nil {
+		renderReportLog(w, trackedItems)
+	} else {
+		io.WriteString(w, "NOPE")
+	}
+}
+
+func serveDashboard(w http.ResponseWriter, _ *http.Request) {
+	trackedItems, err := getTrackedItems(100)
+	if err == nil {
+		renderDashboard(w, trackedItems)
+	} else {
+		io.WriteString(w, "NOPE")
+	}
+
 }
 
 // Route declaration
 func router() *mux.Router {
 	r := mux.NewRouter()
-	r.HandleFunc("/", dashboard)
+	r.HandleFunc("/", serveDashboard)
+	r.HandleFunc("/new", createQr).Methods("POST")
 	r.HandleFunc("/qr", createQr).Methods("POST")
 	r.HandleFunc("/qr", serveCreationPage)
 	r.HandleFunc("/qr/{id}", serveQr)
@@ -144,7 +154,7 @@ func router() *mux.Router {
 
 // Initiate web server
 func main() {
-        router := router()
+	router := router()
 	srv := &http.Server{
 		Handler:      router,
 		Addr:         addr,

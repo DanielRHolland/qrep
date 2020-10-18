@@ -1,0 +1,51 @@
+<ul class="collapsible">
+  {{range .}}
+  <li>
+    <div class="collapsible-header">
+      {{if .Issues}}
+          <i class="material-icons">whatshot</i>
+      {{else}}
+          <i class="material-icons">category</i>
+      {{end}}
+      {{.Name}}
+      <span></span>
+         </div>
+      <div class="collapsible-body">
+       <div>
+         <a class="btn waves-effect waves-light modal-trigger" href="#qrmodal{{.Id}}">
+                <i class="material-icons right">qr_code_2</i> VIEW QR CODE
+            </a>
+      </div>
+         <span>
+            <table>
+              <tbody>
+            {{range .Issues}}
+                <tr>
+                  <td>{{.}}</td>
+                </tr>
+            {{else}}
+              <tr>
+                <td>No issues!</td>
+              </tr>
+            {{end}}    
+              </tbody>
+            </table>
+                     </span>
+     </div>
+  </li>
+
+  <!-- QR Modal -->
+
+  <!-- Modal Structure -->
+  <div id="qrmodal{{.Id}}" class="modal">
+    <div class="modal-content">
+      {{template "item_image_card.html" .}}
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
+    </div>
+  </div>
+
+
+  {{end}}
+</ul>

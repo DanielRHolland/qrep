@@ -1,20 +1,6 @@
 {{template "header.html"}}
 
-{{range .TrackedItems}}
-        <h4><a href="/reports/{{.Id}}">Reports for {{.Name}}</a></h4>
-        <ul>
-          {{range .Issues}}
-              <li> {{.}} </li>
-          {{end}}
-        </ul>
-        {{end}}
-        {{if .ItemlessIssues}}
-        <h4>Itemless issues:</h4>
-        <ul>
-          {{range .ItemlessIssues}}
-              <li> {{.}} </li>
-          {{end}}
-        </ul>
-        {{end}}
+<h3>Report Log</h3>
+        {{template "items_issues_view.html" .}}
 
-        {{template "footer.html"}}
+{{template "footer.html"}}
