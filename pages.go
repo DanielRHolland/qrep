@@ -23,7 +23,7 @@ func getTemplatePaths() []string {
 	for i := range filenames {
 		filename := filenames[i]
 		l := len(filename)
-                if filename[l-5:] == ".html" || filename[l-3:] == ".js" {
+		if filename[l-5:] == ".html" || filename[l-3:] == ".js" {
 			filepaths = append(filepaths, dirpath+"/"+filename)
 		}
 	}

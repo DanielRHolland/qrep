@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/qr"
 	"github.com/gorilla/mux"
@@ -13,11 +14,8 @@ import (
 	"time"
 )
 
-const addr = "127.0.0.1:9100"
-const base = "http://" + addr
-
-//var trackedItems []trackedItem
-//var itemlessIssues []string
+var addr string
+var base string
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "Hello, world!\n")
@@ -154,6 +152,11 @@ func router() *mux.Router {
 
 // Initiate web server
 func main() {
+	addrFlag := flag.String("addr", "127.0.0.1:9100", "Server Address:port")
+	flag.Parse()
+	addr = *addrFlag
+	base = "http://" + addr
+	log.Println("Serving on " + addr)
 	router := router()
 	srv := &http.Server{
 		Handler:      router,
