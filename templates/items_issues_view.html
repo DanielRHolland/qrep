@@ -1,7 +1,6 @@
-<ul class="collapsible">
+<ul class="collection">
   {{range .}}
-  <li>
-    <div class="collapsible-header">
+  <li class="collection-item">
       {{if .Issues}}
           <i class="material-icons">whatshot</i>
       {{else}}
@@ -9,36 +8,15 @@
       {{end}}
       {{.Name}}
       <span></span>
-         </div>
-      <div class="collapsible-body">
-       <div>
-         <a class="btn waves-effect waves-light modal-trigger" href="#qrmodal{{.Id}}">
+       <div class="secondary-content">
+         <a class="btn-flat waves-effect waves-light modal-trigger" href="#qrmodal{{.Id}}">
                 <i class="material-icons right">qr_code_2</i> VIEW QR CODE
-            </a>
-      </div>
-         <span>
-            <table>
-              <tbody>
-            {{range .Issues}}
-                <tr>
-                  <td>{{.Description}}</td>
-                  <td>
-                    {{if .Resolved}}
-                        <i class="material-icons right">check_box</i>
-                    {{else}}
-                        <i class="material-icons right">check_box_outline_blank</i> 
-                    {{end}}
-                  </td>
-                </tr>
-            {{else}}
-              <tr>
-                <td>No issues!</td>
-              </tr>
-            {{end}}    
-              </tbody>
-            </table>
-                     </span>
-     </div>
+         </a>
+         <a class="btn-flat waves-effect waves-light" onclick="displayIssues('{{.Id}}')">
+                <i class="material-icons right">list</i> VIEW ISSUES
+         </a>
+
+       </div>
   </li>
 
   <!-- QR Modal -->
@@ -56,3 +34,9 @@
 
   {{end}}
 </ul>
+
+<script>
+  let itemissues = {{.}};
+</script>
+<div id="issues_view"></div>
+
