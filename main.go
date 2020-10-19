@@ -29,7 +29,7 @@ type trackedItem struct {
 
 type issueType struct {
         Description string `json:"description" bson:"description"`
-//        Active bool `json:"active" bson:"active"`
+        Resolved bool `json:"active" bson:"active"`
 }
 
 //POST create new qrcode
@@ -136,13 +136,14 @@ func serveDashboard(w http.ResponseWriter, _ *http.Request) {
 	} else {
 		io.WriteString(w, "NOPE")
 	}
-
 }
 
 // Route declaration
 func router() *mux.Router {
 	r := mux.NewRouter()
+        staticServer := http.FileServer(http.Dir("static/"))
 	r.HandleFunc("/", serveDashboard)
+        r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticServer))
 	r.HandleFunc("/new", createQr).Methods("POST")
 	r.HandleFunc("/qr", createQr).Methods("POST")
 	r.HandleFunc("/qr", serveCreationPage)
