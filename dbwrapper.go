@@ -63,7 +63,7 @@ func getItem(id string) (trackedItem, error) {
 	return item, err
 }
 
-func addIssueToItem(issue string, id string) error {
+func addIssueToItem(issue issueType, id string) error {
 	ctx, client := connectdb()
 	defer client.Disconnect(ctx)
 	collection := client.Database(dbname).Collection(itemsCollection)

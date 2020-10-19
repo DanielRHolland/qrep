@@ -23,8 +23,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 type trackedItem struct {
 	Name   string   `json:"name" bson:"name"`
-	Issues []string `json:"issues" bson:"issues"`
+	Issues []issueType  `json:"issues" bson:"issues"`
 	Id     string   `json:"id" bson:"_id"`
+}
+
+type issueType struct {
+        Description string `json:"description" bson:"description"`
+//        Active bool `json:"active" bson:"active"`
 }
 
 //POST create new qrcode
@@ -41,7 +46,7 @@ func createQr(w http.ResponseWriter, r *http.Request) {
 		json.Unmarshal(reqBody, &item)
 	}
 	if item.Issues == nil {
-		item.Issues = []string{}
+		item.Issues = []issueType{}
 	}
 	item.Id = insertItem(item)
 	serveDashboard(w, r)
@@ -84,8 +89,8 @@ func newReportPosted(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm() //should err check here
 	vars := mux.Vars(r)
 	id, exists := vars["id"]
-
-	issue := r.Form.Get("issue")
+        var issue issueType
+	issue.Description = r.Form.Get("issue")
 
 	if exists {
 		//                itemExists := false
