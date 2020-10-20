@@ -1,9 +1,16 @@
 
 function setIssues(issues) {
     const printIssue = (issue) => {
-        return `<li>
-           <div class="collection-item"><i class="material-icons">whatshot</i> ${issue.description} </div>
-         </li>
+        return `
+        <li>
+           <div class="collection-item">
+              <i class="material-icons">whatshot</i> 
+              ${issue.description} 
+              <a href="#!" class="secondary-content" onclick="toggleIssueResolved('${issue.id}')">
+                 <i class="material-icons">checkbox</i>
+              </a> 
+           </div>
+        </li>
       `;
     }
     var issuelist = "";
@@ -32,4 +39,10 @@ function toggleShow(id) {
   } else {
     x.style.display = "none";
   }
+}
+
+
+function toggleIssueResolved(x) {
+    console.log(x);
+    QrepService.putIssue(x);
 }

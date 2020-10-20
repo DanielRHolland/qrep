@@ -22,14 +22,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 type trackedItem struct {
-	Name   string   `json:"name" bson:"name"`
-	Issues []issueType  `json:"issues" bson:"issues"`
-	Id     string   `json:"id" bson:"_id"`
+	Name   string      `json:"name" bson:"name"`
+	Issues []issueType `json:"issues" bson:"issues"`
+	Id     string      `json:"id" bson:"_id"`
 }
 
 type issueType struct {
-        Description string `json:"description" bson:"description"`
-        Resolved bool `json:"active" bson:"active"`
+	Description string `json:"description" bson:"description"`
+	Resolved    bool   `json:"resolved" bson:"resolved"`
+	Id          string `json:"id" bson:"_id"`
 }
 
 //POST create new qrcode
@@ -89,7 +90,7 @@ func newReportPosted(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm() //should err check here
 	vars := mux.Vars(r)
 	id, exists := vars["id"]
-        var issue issueType
+	var issue issueType
 	issue.Description = r.Form.Get("issue")
 
 	if exists {
@@ -138,12 +139,23 @@ func serveDashboard(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
+func updateIssue(w http.ResponseWriter, r *http.Request) {
+	var issue issueType
+	reqBody, err := ioutil.ReadAll(r.Body)
+	checkError(err)
+	json.Unmarshal(reqBody, &issue)
+	updateDbIssue(issue)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(issue)
+}
+
 // Route declaration
 func router() *mux.Router {
 	r := mux.NewRouter()
-        staticServer := http.FileServer(http.Dir("static/"))
+	staticServer := http.FileServer(http.Dir("static/"))
 	r.HandleFunc("/", serveDashboard)
-        r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticServer))
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticServer))
+	r.HandleFunc("/issue/{id}", updateIssue).Methods("PUT")
 	r.HandleFunc("/new", createQr).Methods("POST")
 	r.HandleFunc("/qr", createQr).Methods("POST")
 	r.HandleFunc("/qr", serveCreationPage)
@@ -159,14 +171,14 @@ func router() *mux.Router {
 // Initiate web server
 func main() {
 	addrFlag := flag.String("addr", "127.0.0.1:9100", "Server Address:port")
-        baseFlag := flag.String("url",  "def", "URL") 
+	baseFlag := flag.String("url", "def", "URL")
 	flag.Parse()
 	addr = *addrFlag
 	base = *baseFlag
-        if base == "def" {
-            base = "http://" + addr
-        }
-	log.Println("Serving on " , base,"(",addr,")")
+	if base == "def" {
+		base = "http://" + addr
+	}
+	log.Println("Serving on ", base, "(", addr, ")")
 	router := router()
 	srv := &http.Server{
 		Handler:      router,

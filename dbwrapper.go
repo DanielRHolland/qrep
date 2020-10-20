@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"time"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -63,9 +62,25 @@ func getItem(id string) (trackedItem, error) {
 	return item, err
 }
 
+func updateDbIssue(issue issueType) error {
+	ctx, client := connectdb()
+	defer client.Disconnect(ctx)
+	collection := client.Database(dbname).Collection(itemsCollection)
+	filter := bson.M{"issues._id": issue.Id} //FIX
+	update := bson.M{"$set": bson.M{"issues.0": issue}}
+	_, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		log.Println("success")
+	}
+	return err
+}
+
 func addIssueToItem(issue issueType, id string) error {
 	ctx, client := connectdb()
 	defer client.Disconnect(ctx)
+	issue.Id = primitive.NewObjectID().Hex()
 	collection := client.Database(dbname).Collection(itemsCollection)
 	filter := bson.M{"_id": id}
 	update := bson.M{"$push": bson.M{"issues": issue}}
@@ -76,7 +91,6 @@ func addIssueToItem(issue issueType, id string) error {
 		fmt.Println("success")
 	}
 	return err
-
 }
 
 func getTrackedItems(maxcount int) ([]trackedItem, error) {

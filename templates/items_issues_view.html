@@ -1,6 +1,8 @@
-<ul class="collection">
+<table>
+  <tbody>
   {{range .}}
-  <li class="collection-item">
+  <tr>
+    <td colspan="2">
       {{if .Issues}}
           <i class="material-icons">whatshot</i>
       {{else}}
@@ -8,16 +10,19 @@
       {{end}}
       {{.Name}}
       <span></span>
-       <div class="secondary-content">
+    </td>
+      <td> 
          <a class="btn-flat waves-effect waves-light modal-trigger" href="#qrmodal{{.Id}}">
-                <i class="material-icons right">qr_code_2</i> VIEW QR CODE
+           <i class="material-icons right">qr_code_2</i> <span class="hide-on-small-only"> VIEW QR CODE </span>
          </a>
+      </td>
+      <td>
          <a class="btn-flat waves-effect waves-light" onclick="displayIssues('{{.Id}}')">
-                <i class="material-icons right">list</i> VIEW ISSUES
+           <i class="material-icons right">list</i> <span class="hide-on-small-only"> VIEW ISSUES </span>
          </a>
-
-       </div>
-  </li>
+      </td>
+      
+      </tr>
 
   <!-- QR Modal -->
 
@@ -33,7 +38,8 @@
 
 
   {{end}}
-</ul>
+  </tbody>
+</table>
 
 <script>
   let itemissues = {{.}};
