@@ -1,49 +1,47 @@
+<div class="row">
+    <div class="col s6">
+          <table>
+          <tbody>
+          {{range .}}
+          <tr>
+            <td colspan="2">
+              {{if .Issues}}
+                  <i class="material-icons">whatshot</i>
+              {{else}}
+                  <i class="material-icons">category</i>
+              {{end}}
+              {{.Name}}
+              <span></span>
+            </td>
+              <td> 
+                 <a class="btn-flat waves-effect waves-light modal-trigger" href="#qrmodal{{.Id}}">
+                   <i class="material-icons right">qr_code_2</i> <span class="hide-on-small-only"> VIEW QR CODE </span>
+                 </a>
+              </td>
+              <td>
+                 <a class="btn-flat waves-effect waves-light" onclick="QrepController.displayIssues('{{.Id}}')">
+                   <i class="material-icons right">list</i> <span class="hide-on-small-only"> VIEW ISSUES </span>
+                 </a>
+              </td>
+              </tr>
 
-<table>
-  <tbody>
-  {{range .}}
-  <tr>
-    <td colspan="2">
-      {{if .Issues}}
-          <i class="material-icons">whatshot</i>
-      {{else}}
-          <i class="material-icons">category</i>
-      {{end}}
-      {{.Name}}
-      <span></span>
-    </td>
-      <td> 
-         <a class="btn-flat waves-effect waves-light modal-trigger" href="#qrmodal{{.Id}}">
-           <i class="material-icons right">qr_code_2</i> <span class="hide-on-small-only"> VIEW QR CODE </span>
-         </a>
-      </td>
-      <td>
-         <a class="btn-flat waves-effect waves-light" onclick="QrepController.displayIssues('{{.Id}}')">
-           <i class="material-icons right">list</i> <span class="hide-on-small-only"> VIEW ISSUES </span>
-         </a>
-      </td>
-      
-      </tr>
-
-  <!-- QR Modal -->
-
-  <!-- Modal Structure -->
-  <div id="qrmodal{{.Id}}" class="modal">
-    <div class="modal-content">
-      {{template "item_image_card.html" .}}
+          <!-- QR Modal -->
+          <div id="qrmodal{{.Id}}" class="modal">
+            <div class="modal-content">
+              {{template "item_image_card.html" .}}
+            </div>
+            <div class="modal-footer">
+              <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
+            </div>
+          </div>
+          {{end}}
+          </tbody>
+        </table>
     </div>
-    <div class="modal-footer">
-      <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
+    <div class="col s6">
+        <script>
+          let itemissues = {{.}};
+        </script>
+        <div id="issues_view"></div>
     </div>
-  </div>
-
-
-  {{end}}
-  </tbody>
-</table>
-
-<script>
-  let itemissues = {{.}};
-</script>
-<div id="issues_view"></div>
-
+</div>
