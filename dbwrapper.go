@@ -67,7 +67,7 @@ func updateDbIssue(issue issueType) error {
 	defer client.Disconnect(ctx)
 	collection := client.Database(dbname).Collection(itemsCollection)
 	filter := bson.M{"issues._id": issue.Id} //FIX
-	update := bson.M{"$set": bson.M{"issues.0": issue}}
+	update := bson.M{"$set": bson.M{"issues.$": issue}}
 	_, err := collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		log.Fatal(err)
