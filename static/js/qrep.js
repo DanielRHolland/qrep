@@ -1,6 +1,7 @@
 var QrepController = {
     getCheckBox: function (resolved) { return resolved ? "check_box" : "check_box_outline_blank";},
-    setIssues: function (issues) {
+    setIssues: function (item) {
+        issues = item.issues
         const printIssue = (issue) => {
             return `
             <li>
@@ -8,7 +9,7 @@ var QrepController = {
                   <i class="material-icons">whatshot</i> 
                   ${issue.description} 
                   <a style="cursor:pointer;" class="secondary-content" onclick="QrepController.toggleIssueResolved('${issue.id}')">
-                     <i id="${issue.id}resolved" class="material-icons">${QrepController.getCheckBox(issue.resolved)}</i>
+                     <i class="material-icons ${issue.id}resolved" >${QrepController.getCheckBox(issue.resolved)}</i>
                   </a> 
                </div>
             </li>
@@ -18,17 +19,25 @@ var QrepController = {
         for (i of issues) {
           issuelist += printIssue(i);
         }
-        
-        document.getElementById("issues_view").innerHTML =
-        `<ul class="collection">
+        var htmlToSet = `
+        <h4> ${item.name} </h4>
+        <ul class="collection">
               ${issuelist}
          </ul>
         `;
+        document.getElementById("issues_modal_view").innerHTML = htmlToSet;
+        document.getElementById("issues_view").innerHTML = htmlToSet;
+
+        let isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
+        if (isMobile){
+            let elem = document.getElementById("issuesModal");
+            M.Modal.getInstance(elem).open();
+        }     
     },
 
     displayIssues: function (id) {
-        issues = itemissues.find(item => item.id==id).issues
-        QrepController.setIssues(issues);
+        item = itemissues.find(item => item.id==id);
+        QrepController.setIssues(item);
     },
 
     toggleShow: function (id) {
@@ -46,7 +55,10 @@ var QrepController = {
     },
 
     setResolved: function (id, resolved) {
-        document.getElementById(id+"resolved").innerHTML = QrepController.getCheckBox(resolved)
+        let elems = document.getElementsByClassName(id+"resolved");
+        for (i=0; i<elems.length; i++) {
+            elems[i].innerHTML = QrepController.getCheckBox(resolved);
+        }
         M.toast({html: resolved ? "Issue resolved!" : "Issue unresolved."});
     }
 }

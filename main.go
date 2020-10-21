@@ -50,7 +50,7 @@ func createQr(w http.ResponseWriter, r *http.Request) {
 		item.Issues = []issueType{}
 	}
 	item.Id = insertItem(item)
-	serveDashboard(w, r)
+	http.Redirect(w, r, "", 303)
 }
 
 //GET qrCreation page
