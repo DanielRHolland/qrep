@@ -3,9 +3,24 @@
       <h3> Assets  </h3>
           <table>
           <tbody>
+            <tr>
+              <th>NAME</th>
+              <th><div class="center-align">QR</div></th>
+              <th><div class="center-align">ISSUES</div></th>
+            </tr>
+           <tr>
+            <form method="get">
+              <th class="input-field">
+                  <input name="name" type="text">
+              </th>
+              <th>
+                <button class="btn-flat waves-effect waves-light" type="submit" name="action">                  <i class="material-icons">search</i> </button>
+              </th>
+            </form>
+          </tr>
           {{range .}}
-          <tr>
-            <td colspan="2">
+                 <tr>
+            <td>
               {{if .Issues}}
                   <i class="material-icons">whatshot</i>
               {{else}}
@@ -14,15 +29,19 @@
               {{.Name}}
               <span></span>
             </td>
-              <td> 
+              <td>
+                <div class="center-align">
                  <a class="btn-flat waves-effect waves-light modal-trigger" href="#qrmodal{{.Id}}">
-                   <i class="material-icons right">qr_code_2</i> <span class="hide-on-small-only"> VIEW QR CODE </span>
+                   <i class="material-icons">qr_code_2</i>
                  </a>
+                </div>
               </td>
               <td>
+                <div class="center-align">
                  <a class="btn-flat waves-effect waves-light" onclick="QrepController.displayIssues('{{.Id}}')">
-                   <i class="material-icons right">list</i> <span class="hide-on-small-only"> VIEW ISSUES </span>
+                   <i class="material-icons">list</i>
                  </a>
+                </div>
               </td>
               </tr>
 
@@ -53,6 +72,7 @@
   <!-- Modal Structure -->
   <div id="issuesModal" class="modal modal-fixed-footer hide-on-med-and-up">
     <div class="modal-content">
+      <h4> Issues</h4>
       <div id="issues_modal_view"></div>
     </div>
     <div class="modal-footer">

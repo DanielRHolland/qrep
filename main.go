@@ -130,8 +130,16 @@ func serveReportLog(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func serveDashboard(w http.ResponseWriter, _ *http.Request) {
-	trackedItems, err := getTrackedItems(100)
+func serveDashboard(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	name, namePresent := query["name"]
+	var trackedItems []trackedItem
+	var err error
+	if !namePresent || len(name) <= 0 || name[0] == "" {
+		trackedItems, err = getTrackedItems(100)
+	} else {
+		trackedItems, err = searchTrackedItems(100, name[0])
+	}
 	if err == nil {
 		renderDashboard(w, trackedItems)
 	} else {

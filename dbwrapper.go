@@ -66,7 +66,7 @@ func updateDbIssue(issue issueType) error {
 	ctx, client := connectdb()
 	defer client.Disconnect(ctx)
 	collection := client.Database(dbname).Collection(itemsCollection)
-	filter := bson.M{"issues._id": issue.Id} //FIX
+	filter := bson.M{"issues._id": issue.Id}
 	update := bson.M{"$set": bson.M{"issues.$": issue}}
 	_, err := collection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -112,5 +112,26 @@ func getTrackedItems(maxcount int) ([]trackedItem, error) {
 		log.Fatal(err)
 	}
 	return items, err
+}
 
+func searchTrackedItems(maxcount int, name string) ([]trackedItem, error) {
+	ctx, client := connectdb()
+	defer client.Disconnect(ctx)
+	collection := client.Database(dbname).Collection(itemsCollection)
+	filter := bson.M{"name": name}
+	var items []trackedItem
+	cursor, err := collection.Find(ctx, filter)
+	defer cursor.Close(ctx)
+	for cursor.Next(ctx) {
+		var item trackedItem
+		if err = cursor.Decode(&item); err != nil {
+			log.Fatal(err)
+		} else {
+			items = append(items, item)
+		}
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+	return items, err
 }
