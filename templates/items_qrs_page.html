@@ -1,0 +1,11 @@
+{{template "header.html"}}
+
+<div class="row s12">
+    {{range .}}
+        <div class="col s12 m6 l3">
+           {{template "item_image_card.html" . }}
+        </div>
+    {{end}}
+</div>
+
+{{template "footer.html"}}

@@ -157,6 +157,19 @@ func updateIssue(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(issue)
 }
 
+func serveItems(w http.ResponseWriter, r *http.Request) {
+        query := r.URL.Query()
+        action, actionPresent := query["action"]
+        if (actionPresent && len(action) > 0 && action[0] == "getqrs") {
+            itemids, itemidsPresent := query["item"]
+            if (itemidsPresent && len(itemids) > 0) {
+                items := getItemsFromIds(itemids)
+                renderItemsQrsPage(w, items)
+            }
+        }
+        io.WriteString(w, "foo")
+}
+
 // Route declaration
 func router() *mux.Router {
 	r := mux.NewRouter()
@@ -166,6 +179,7 @@ func router() *mux.Router {
 	r.HandleFunc("/issue/{id}", updateIssue).Methods("PUT")
 	r.HandleFunc("/new", createQr).Methods("POST")
 	r.HandleFunc("/qr", createQr).Methods("POST")
+	r.HandleFunc("/items", serveItems)
 	r.HandleFunc("/qr", serveCreationPage)
 	r.HandleFunc("/qr/{id}", serveQr)
 	r.HandleFunc("/qrpng/{id}", serveQrPng)

@@ -135,3 +135,13 @@ func searchTrackedItems(maxcount int, name string) ([]trackedItem, error) {
 	}
 	return items, err
 }
+
+func getItemsFromIds(itemids []string) []trackedItem {
+        var items []trackedItem
+        for _, id := range itemids {
+            item, _ :=getItem(id) //TODO Catch errors
+            items = append(items, item)
+        }
+        return items
+}
+
