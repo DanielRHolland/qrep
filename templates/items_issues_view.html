@@ -1,33 +1,61 @@
+
+
 <div class="row">
     <div class="col s12 m6">
-      <h3> Assets  </h3>
+      <h3> Assets </h3>
           <table>
           <tbody>
-            <tr>
-              <th>NAME</th>
-              <th><div class="center-align">QR</div></th>
-              <th><div class="center-align">ISSUES</div></th>
-            </tr>
+           <!-- Top row contains search form and page refresh button  -->
            <tr>
             <form method="get">
               <th class="input-field">
                   <input name="name" type="text">
               </th>
               <th>
-                <button class="btn-flat waves-effect waves-light" type="submit" name="action">                  <i class="material-icons">search</i> </button>
+                <button class="btn-flat waves-effect waves-light" type="submit" name="action" value=search>                  <i class="material-icons">search</i> </button>
               </th>
             </form>
+              <th>
+                <a class="btn-flat waves-effect waves-light" href="" >
+                  <i class="material-icons">refresh</i>
+                </a>
+              </th>
           </tr>
+          <!-- Second row contains headers -->
+          <tr>
+            <th>
+
+              <span>
+              <!-- Dropdown Trigger -->
+              <a class='dropdown-trigger btn-flat' href='#' data-target='dropdown1'> 
+                  <i class="material-icons">more_vert</i>
+              </a>
+
+              <!-- Dropdown Structure -->
+              <ul id='dropdown1' class='dropdown-content'>
+                <li><button form="itemsselector" class="btn-flat waves-effect waves-light" type="submit" name="action">
+                  <i class="material-icons right">qr_code_2</i> QR CODES
+             </button>
+                </li>
+ 
+              </ul>
+              </span>
+              <span>
+              NAME
+              </span>
+            </th>
+            <th><div class="center-align">QR</div></th>
+            <th><div class="center-align">ISSUES</div></th>
+          </tr>
+          <!-- Remaining rows contain item/asset names, & buttons to view QR Code and Issues -->
+          <form id="itemsselector" method="get" action="items">
           {{range .}}
-                 <tr>
+          <tr>
             <td>
-              {{if .Issues}}
-                  <i class="material-icons">whatshot</i>
-              {{else}}
-                  <i class="material-icons">category</i>
-              {{end}}
-              {{.Name}}
-              <span></span>
+                   <label>
+                    <input type="checkbox" class="filled-in" name="item" value="{{.Id}}"/>  
+                    <span class="grey-text text-darken-3"> {{.Name}}</span>
+                  </label>           
             </td>
               <td>
                 <div class="center-align">
@@ -37,47 +65,57 @@
                 </div>
               </td>
               <td>
+                {{if .Issues}}
                 <div class="center-align">
                  <a class="btn-flat waves-effect waves-light" onclick="QrepController.displayIssues('{{.Id}}')">
-                   <i class="material-icons">list</i>
+                   <i class="material-icons">assignment_late</i>
                  </a>
                 </div>
+                {{end}}
               </td>
-              </tr>
-
-          <!-- QR Modal -->
-          <div id="qrmodal{{.Id}}" class="modal">
-            <div class="modal-content">
-              {{template "item_image_card.html" .}}
-            </div>
-            <div class="modal-footer">
-              <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
-            </div>
-          </div>
+          </tr>
           {{end}}
+
+          </form>
           </tbody>
         </table>
     </div>
 
+
+    <!-- QR Modals - A modal per item, which displays its QR Code -->
+    {{range .}}
+    <div id="qrmodal{{.Id}}" class="modal">
+      <div class="modal-content">
+        {{template "item_image_card.html" .}}
+      </div>
+      <div class="modal-footer">
+        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
+      </div>
+    </div>
+    {{end}}
+    <!-- ------------- -->
+
+    <!-- Issues Right-hand panel (Either this or the issues modal should display - never both) -->
     <div class="col m6 hide-on-small-only">
         <h3> Issues  </h3>  
-
+        <!-- Items stored in js value, then pane content set by QrepController (qrep.js) -->
         <script>
           let itemissues = {{.}};
         </script>
         <div id="issues_view"></div>
     </div>
+    <!-- ------------- -->
 
-
-  <!-- Modal Structure -->
-  <div id="issuesModal" class="modal modal-fixed-footer hide-on-med-and-up">
-    <div class="modal-content">
-      <h4> Issues</h4>
-      <div id="issues_modal_view"></div>
+    <!-- Issues Modal (to replace Issues right-hand panel on small screens) -->
+    <div id="issuesModal" class="modal modal-fixed-footer hide-on-med-and-up">
+      <div class="modal-content">
+        <h4> Issues</h4>
+        <div id="issues_modal_view"></div>
+      </div>
+      <div class="modal-footer">
+        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
+      </div>
     </div>
-    <div class="modal-footer">
-      <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
-    </div>
-  </div>
+    <!-- ------------- -->
 
 </div>

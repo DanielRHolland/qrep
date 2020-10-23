@@ -1,6 +1,7 @@
 var QrepController = {
     getCheckBox: function (resolved) { return resolved ? "check_box" : "check_box_outline_blank";},
-    setIssues: function (item) {
+    displayIssues: function (id, showResolvedIssues=false) {
+        let item = itemissues.find(item => item.id==id);
         issues = item.issues
         const printIssue = (issue) => {
             return `
@@ -9,7 +10,7 @@ var QrepController = {
                   <i class="material-icons">whatshot</i> 
                   ${issue.description} 
                   <a style="cursor:pointer;" class="secondary-content" onclick="QrepController.toggleIssueResolved('${issue.id}')">
-                     <i class="material-icons ${issue.id}resolved" >${QrepController.getCheckBox(issue.resolved)}</i>
+                     <i id="${issue.id}resolved" class="material-icons">${QrepController.getCheckBox(issue.resolved)}</i>
                   </a> 
                </div>
             </li>
@@ -17,27 +18,29 @@ var QrepController = {
         }
         var issuelist = "";
         for (i of issues) {
-          issuelist += printIssue(i);
+          if (i.resolved == showResolvedIssues) issuelist += printIssue(i);
         }
-        var htmlToSet = `
-        <h4> ${item.name} </h4>
-        <ul class="collection">
+//        var toggleShowResolvedButtonText = 
+        var toggleViewResolvedButton =`
+            <a class="btn-flat waves-effect waves-light" onclick="QrepController.displayIssues('${id}',${!showResolvedIssues})">
+                <i class="material-icons">compare_arrows</i>
+                ${showResolvedIssues ? "SHOW UNRESOLVED ISSUES"   :  "SHOW RESOLVED ISSUES"}
+            </a>`
+
+        var htmlToSet =
+        `<h4> ${item.name} </h4>
+         ${toggleViewResolvedButton}
+         <ul class="collection">
               ${issuelist}
          </ul>
         `;
-        document.getElementById("issues_modal_view").innerHTML = htmlToSet;
         document.getElementById("issues_view").innerHTML = htmlToSet;
-
+        document.getElementById("issues_modal_view").innerHTML = htmlToSet;
         let isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
         if (isMobile){
             let elem = document.getElementById("issuesModal");
             M.Modal.getInstance(elem).open();
-        }     
-    },
-
-    displayIssues: function (id) {
-        item = itemissues.find(item => item.id==id);
-        QrepController.setIssues(item);
+        } 
     },
 
     toggleShow: function (id) {
@@ -53,7 +56,7 @@ var QrepController = {
         console.log(x);
         QrepService.toggleIssueResolved(x);
     },
-
+    
     setResolved: function (id, resolved) {
         let elems = document.getElementsByClassName(id+"resolved");
         for (i=0; i<elems.length; i++) {
