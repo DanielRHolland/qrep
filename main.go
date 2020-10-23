@@ -167,7 +167,6 @@ func serveItems(w http.ResponseWriter, r *http.Request) {
                 renderItemsQrsPage(w, items)
             }
         }
-        io.WriteString(w, "foo")
 }
 
 // Route declaration
