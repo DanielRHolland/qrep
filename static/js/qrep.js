@@ -5,7 +5,7 @@ var QrepController = {
         issues = item.issues
         const printIssue = (issue) => {
             return `
-            <li>
+            <li class="${issue.id}listitem">
                <div class="collection-item">
                   <span>${issue.description}</span> 
                   <a style="cursor:pointer;" class="secondary-content" onclick="QrepController.toggleIssueResolved('${issue.id}')">
@@ -57,9 +57,9 @@ var QrepController = {
     },
     
     setResolved: function (id, resolved) {
-        let elems = document.getElementsByClassName(id+"resolved");
+        let elems = document.getElementsByClassName(id+"listitem");
         for (i=0; i<elems.length; i++) {
-            elems[i].innerHTML = QrepController.getCheckBox(resolved);
+              elems[i].remove()
         }
         M.toast({html: resolved ? "Issue resolved!" : "Issue unresolved."});
     }
