@@ -62,5 +62,12 @@ var QrepController = {
               elems[i].remove()
         }
         M.toast({html: resolved ? "Issue resolved!" : "Issue unresolved."});
+    },
+    
+    print(id) {
+      var printContents = document.getElementById(id).innerHTML;
+      document.body.innerHTML = printContents;
+      window.print();
+      location.reload(true)
     }
 }
