@@ -7,8 +7,7 @@ var QrepController = {
             return `
             <li>
                <div class="collection-item">
-                  <i class="material-icons">whatshot</i> 
-                  ${issue.description} 
+                  <span>${issue.description}</span> 
                   <a style="cursor:pointer;" class="secondary-content" onclick="QrepController.toggleIssueResolved('${issue.id}')">
                      <i id="${issue.id}resolved" class="material-icons">${QrepController.getCheckBox(issue.resolved)}</i>
                   </a> 
