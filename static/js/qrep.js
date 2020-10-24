@@ -5,7 +5,7 @@ var QrepController = {
         issues = item.issues
         const printIssue = (issue) => {
             return `
-            <li class="${issue.id}listitem">
+            <li id="${issue.id}listitem" class="${issue.id}listitem">
                <div class="collection-item">
                   <span>${issue.description}</span> 
                   <a style="cursor:pointer;" class="secondary-content" onclick="QrepController.toggleIssueResolved('${issue.id}')">
@@ -57,14 +57,16 @@ var QrepController = {
     },
     
     setResolved: function (id, resolved) {
+        document.getElementById(id+"listitem").remove(); //Removing by class doesn't seem to work in modals, remove by id does
         let elems = document.getElementsByClassName(id+"listitem");
         for (i=0; i<elems.length; i++) {
-              elems[i].remove()
+              let elem = elems[i];
+              elem.remove();
         }
         M.toast({html: resolved ? "Issue resolved!" : "Issue unresolved."});
     },
     
-    print(id) {
+    print: function (id) {
       var printContents = document.getElementById(id).innerHTML;
       document.body.innerHTML = printContents;
       window.print();
