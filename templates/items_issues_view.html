@@ -24,19 +24,30 @@
             <th>
 
               <span>
+                <!--
+                <button form="itemsselector" class="btn-flat waves-effect waves-light" type="submit" name="action" value="getqrs">
+                  <i class="material-icons">print</i>
+                </button>
+                -->
               <!-- Dropdown Trigger -->
+              
               <a class='dropdown-trigger btn-flat' href='#' data-target='dropdown1'> 
-                  <i class="material-icons">more_vert</i>
+                  <i class="material-icons">settings</i>
               </a>
-
+              
               <!-- Dropdown Structure -->
               <ul id='dropdown1' class='dropdown-content'>
-                <li><button form="itemsselector" class="btn-flat waves-effect waves-light" type="submit" name="action" value="getqrs">
-                  <i class="material-icons right">qr_code_2</i> QR CODES
-             </button>
+                <li>
+                  <button form="itemsselector" class="btn-flat waves-effect waves-light" type="submit" name="action" value="getqrs">
+                    <i class="material-icons left">print</i><span>PRINT</span>
+                  </button>
                 </li>
- 
-              </ul>
+                <li>
+                  <button form="itemsselector" class="btn-flat waves-effect waves-light" type="submit" name="action" value="getqrspdf">
+                    <i class="material-icons left">cloud_download</i><span>PDF</span>
+                  </button>
+                </li>         
+              </ul>  
               </span>
               <span>
               NAME

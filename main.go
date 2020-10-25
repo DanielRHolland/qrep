@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"github.com/boombuler/barcode"
@@ -10,7 +11,9 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -158,15 +161,40 @@ func updateIssue(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveItems(w http.ResponseWriter, r *http.Request) {
-        query := r.URL.Query()
-        action, actionPresent := query["action"]
-        if (actionPresent && len(action) > 0 && action[0] == "getqrs") {
-            itemids, itemidsPresent := query["item"]
-            if (itemidsPresent && len(itemids) > 0) {
-                items := getItemsFromIds(itemids)
-                renderItemsQrsPage(w, items)
-            }
-        }
+	query := r.URL.Query()
+	itemids, itemidsPresent := query["item"]
+	if itemidsPresent && len(itemids) > 0 {
+		items := getItemsFromIds(itemids)
+
+		action, actionPresent := query["action"]
+		if actionPresent && len(action) > 0 {
+			switch action[0] {
+			case "getqrs":
+				index := rand.Int()
+				pdfcache[index] = generateQrsPdf(items)
+				indexstring := strconv.Itoa(index)
+				renderItemsQrsPage(w, indexstring)
+			case "getqrspdf":
+				mypdf := generateQrsPdf(items)
+				mypdf.WriteTo(w) //should catch error
+			}
+		}
+	}
+}
+
+var pdfcache = make(map[int]bytes.Buffer)
+
+func serveCachedPdf(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	index, err := strconv.Atoi(id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if cachedpdf, exists := pdfcache[index]; exists {
+		cachedpdf.WriteTo(w)
+		delete(pdfcache, index)
+	}
 }
 
 // Route declaration
@@ -179,6 +207,7 @@ func router() *mux.Router {
 	r.HandleFunc("/new", createQr).Methods("POST")
 	r.HandleFunc("/qr", createQr).Methods("POST")
 	r.HandleFunc("/items", serveItems)
+	r.HandleFunc("/dl/{id}/qrcodes.pdf", serveCachedPdf)
 	r.HandleFunc("/qr", serveCreationPage)
 	r.HandleFunc("/qr/{id}", serveQr)
 	r.HandleFunc("/qrpng/{id}", serveQrPng)
