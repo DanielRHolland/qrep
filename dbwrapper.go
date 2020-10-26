@@ -10,6 +10,7 @@ import (
 	"log"
 	"time"
 	//   "go.mongodb.org/mongo-driver/mongo/readpref"
+         "encoding/base64"
 )
 
 const mongodbURI = "mongodb://localhost:27017"
@@ -32,7 +33,9 @@ func connectdb() (context.Context, *mongo.Client) {
 }
 
 func insertTrackedItem(ctx context.Context, client *mongo.Client, item trackedItem) string {
-	item.Id = primitive.NewObjectID().Hex()
+        var idbytes [12]byte =  primitive.NewObjectID()
+        var idbyteslice []byte = idbytes[:]
+        item.Id = base64.StdEncoding.EncodeToString(idbyteslice)
 	collection := client.Database(dbname).Collection(itemsCollection)
 	_, err := collection.InsertOne(ctx, item)
 	if err != nil {
@@ -143,4 +146,8 @@ func getItemsFromIds(itemids []string) []trackedItem {
 		items = append(items, item)
 	}
 	return items
+}
+
+func removeItemsFromDb(itemids []string) {
+        log.Println("Place holder remove items by id here. Ids:", itemids)
 }
