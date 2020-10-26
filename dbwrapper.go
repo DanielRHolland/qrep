@@ -149,5 +149,14 @@ func getItemsFromIds(itemids []string) []trackedItem {
 }
 
 func removeItemsFromDb(itemids []string) {
-        log.Println("Place holder remove items by id here. Ids:", itemids)
+      	ctx, client := connectdb()
+	defer client.Disconnect(ctx)
+	collection := client.Database(dbname).Collection(itemsCollection)
+        for _, id := range itemids {
+            filter := bson.M{"_id": id}
+            _, err := collection.DeleteOne(ctx, filter)
+            if err != nil {
+                log.Fatal(err)
+            }
+        }
 }
