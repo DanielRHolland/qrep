@@ -218,6 +218,15 @@ func generateQrsZip(w http.ResponseWriter, items []trackedItem) {
         zipWriter.Close() //errors to handle
 }
 
+func removeItems(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	itemids, itemidsPresent := query["item"]
+	if itemidsPresent && len(itemids) > 0 {
+                removeItemsFromDb(itemids) 
+        }
+	http.Redirect(w, r, "", 303)
+}
+
 // Route declaration
 func router() *mux.Router {
 	r := mux.NewRouter()
@@ -227,7 +236,8 @@ func router() *mux.Router {
 	r.HandleFunc("/issue/{id}", updateIssue).Methods("PUT")
 	r.HandleFunc("/new", createQr).Methods("POST")
 	r.HandleFunc("/qr", createQr).Methods("POST")
-	r.HandleFunc("/items", serveItems)
+	r.HandleFunc("/remove", removeItems).Methods("GET")//GET shouldn't modify server state
+	r.HandleFunc("/items", serveItems).Methods("GET")
 	r.HandleFunc("/dl/qrcodes.zip", serveItems)
 	r.HandleFunc("/dl/{id}/qrcodes.pdf", serveCachedPdf)
 	r.HandleFunc("/qr", serveCreationPage)

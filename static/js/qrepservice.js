@@ -35,5 +35,11 @@ var QrepService = {
       return itemissues
         .find(item => item.issues.some(issueIdMatch))
         .issues.find(issueIdMatch);
+    },
+
+    deleteSelectedItems: () => {
+      let form = document.getElementById("itemsselector");
+      form.action="remove";
+      form.submit();
     }
 }
