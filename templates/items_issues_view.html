@@ -100,13 +100,22 @@
 
     <!-- QR Modals - A modal per item, which displays its QR Code -->
     {{range .}}
-    <div id="qrmodal{{.Id}}" class="modal">
+    <div id="qrmodal{{.Id}}" class="modal modal-fixed-footer">
       <div class="modal-content">
         {{template "item_image_card.html" .}}
       </div>
       <div class="modal-footer">
-        <button onclick="QrepController.print('itemimgcard{{.Id}}')"  class="waves-effect waves-green btn-flat">Print</button>
-        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
+        <a onclick="QrepController.print('itemimgcard{{.Id}}')"  class="waves-effect waves-light btn-flat">
+          <i class="material-icons left">print</i><span class="hide-on-small-only">PRINT</span>
+        </a>
+        <a href="/items?action=getqrs&item={{.Id}}" class="btn-flat waves-effect waves-light" >
+                    <i class="material-icons left">picture_as_pdf</i><span class="hide-on-small-only">DOWNLOAD PDF</span>
+        </a>
+        <a href="/dl/{{.Id}}.png" class="btn-flat waves-effect waves-light" download>
+          <i class="material-icons left">image</i><span class="hide-on-small-only">DOWNLOAD PNG</span>
+        </a>
+        <a href="#!" class="modal-close waves-effect waves-green btn-flat">
+        <i class="material-icons left">close</i><span class="hide-on-small-only">CLOSE</span> </a>
       </div>
     </div>
     {{end}}
@@ -138,7 +147,7 @@
     <!-- Item Deletion Confirmation Modal -->
     <div id="deletionWarningModal" class="modal modal-fixed-footer">
       <div class="modal-content">
-        <div> Are you sure that you want to permanently delete the selected items?</div>
+        Are you sure that you want to permanently delete the selected items?
       </div>
       <div class="modal-footer">
         <a onclick="QrepService.deleteSelectedItems()"  href="#!" class="modal-close waves-effect waves-green btn-flat">DELETE ITEMS</a>

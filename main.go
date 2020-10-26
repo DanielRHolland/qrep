@@ -67,7 +67,6 @@ func serveQr(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	if item, err := getItem(id); err == nil { // qr
-		//            io.WriteString(w, trackedItems[i].Name)
 		renderQr(w, item)
 	} else {
 		io.WriteString(w, "NOPE")
@@ -100,19 +99,8 @@ func newReportPosted(w http.ResponseWriter, r *http.Request) {
 	id, exists := vars["id"]
 	var issue issueType
 	issue.Description = r.Form.Get("issue")
-
 	if exists {
-		//                itemExists := false
-		//
-		//        } else {
-
-		//        }
-
-		//	if exists && itemExists  { // If
-		//Add new issue to the item with the id
 		addIssueToItem(issue, id)
-		//	} else {
-		//Insert new issue into itemlessIssues
 	}
 	thanksForReport(w)
 }
@@ -238,6 +226,7 @@ func router() *mux.Router {
 	r.HandleFunc("/qr", createQr).Methods("POST")
 	r.HandleFunc("/remove", removeItems).Methods("GET")//GET shouldn't modify server state
 	r.HandleFunc("/items", serveItems).Methods("GET")
+	r.HandleFunc("/dl/{id}.png", serveQrPng)
 	r.HandleFunc("/dl/qrcodes.zip", serveItems)
 	r.HandleFunc("/dl/{id}/qrcodes.pdf", serveCachedPdf)
 	r.HandleFunc("/qr", serveCreationPage)
