@@ -36,7 +36,7 @@
               </a>
               
               <!-- Dropdown Structure -->
-              <ul id='dropdown1' class='dropdown-content'>
+              <ul id='dropdown1' style="width=116px !important;" class='dropdown-content'>
                 <li>
                   <button form="itemsselector" class="btn-flat waves-effect waves-light" type="submit" name="action" value="getqrs">
                     <i class="material-icons left">print</i><span>PDF</span>
@@ -50,8 +50,8 @@
                 </li>         
                 <li class="divider"></li>
                 <li>
-                  <button form="itemsselector" class="btn-flat waves-effect waves-light" type="submit" name="action" value="remove" formmethod="post" >
-                    <i class="material-icons left">delete</i><span>DEL</span>
+                 <button class="btn-flat waves-effect waves-light modal-trigger " data-target="deletionWarningModal">
+                    <i class="material-icons left text-accent-4 red-text">delete</i><span>DELETE</span>
                   </button>
                 </li>
               </ul>  
@@ -134,5 +134,18 @@
       </div>
     </div>
     <!-- ------------- -->
+
+    <!-- Item Deletion Confirmation Modal -->
+    <div id="deletionWarningModal" class="modal modal-fixed-footer">
+      <div class="modal-content">
+        <div> Are you sure that you want to permanently delete the selected items?</div>
+      </div>
+      <div class="modal-footer">
+        <a onclick="QrepService.deleteSelectedItems()"  href="#!" class="modal-close waves-effect waves-green btn-flat">DELETE ITEMS</a>
+        <a href="#!" class="modal-close waves-effect waves-green btn-flat">CANCEL</a>
+      </div>
+    </div>
+    <!-- ------------- -->
+
 
 </div>
