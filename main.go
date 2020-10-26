@@ -171,7 +171,7 @@ func serveItems(w http.ResponseWriter, r *http.Request) {
 			switch action[0] {
 			case "getqrs":
 				index := rand.Int()
-				pdfcache[index] = generateQrsPdf(items)
+				pdfcache[index] = parGenQrPdf(items)
 				indexstring := strconv.Itoa(index)
 				renderItemsQrsPage(w, indexstring)
 			case "getqrspdf":
@@ -182,7 +182,13 @@ func serveItems(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var pdfcache = make(map[int]bytes.Buffer)
+func parGenQrPdf(items []trackedItem) chan bytes.Buffer {
+        pdfChan := make(chan bytes.Buffer)
+        go func() {pdfChan <- generateQrsPdf(items) }()
+        return pdfChan
+}
+
+var pdfcache = make(map[int]chan bytes.Buffer)
 
 func serveCachedPdf(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -191,8 +197,10 @@ func serveCachedPdf(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if cachedpdf, exists := pdfcache[index]; exists {
-		cachedpdf.WriteTo(w)
+	if pdfChan, exists := pdfcache[index]; exists {
+                pdfbytes := <-pdfChan
+                pdfbytes.WriteTo(w)
+                close(pdfChan)
 		delete(pdfcache, index)
 	}
 }
