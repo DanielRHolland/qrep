@@ -39,14 +39,21 @@
               <ul id='dropdown1' class='dropdown-content'>
                 <li>
                   <button form="itemsselector" class="btn-flat waves-effect waves-light" type="submit" name="action" value="getqrs">
-                    <i class="material-icons left">print</i><span>PRINT</span>
+                    <i class="material-icons left">print</i><span>PDF</span>
                   </button>
                 </li>
-                <li>
-                  <button form="itemsselector" class="btn-flat waves-effect waves-light" type="submit" name="action" value="getqrspdf">
-                    <i class="material-icons left">cloud_download</i><span>PDF</span>
+                </li>         
+               <li>
+                  <button form="itemsselector" class="btn-flat waves-effect waves-light" type="submit" name="action" value="getqrszip" formaction="/dl/qrcodes.zip">
+                    <i class="material-icons left">archive</i><span>ZIP</span>
                   </button>
                 </li>         
+                <li class="divider"></li>
+                <li>
+                  <button form="itemsselector" class="btn-flat waves-effect waves-light" type="submit" name="action" value="remove" formmethod="post" >
+                    <i class="material-icons left">delete</i><span>DEL</span>
+                  </button>
+                </li>
               </ul>  
               </span>
               <span>

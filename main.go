@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+        "archive/zip"
 )
 
 var addr string
@@ -77,7 +78,11 @@ func serveQr(w http.ResponseWriter, r *http.Request) {
 
 func serveQrPng(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	url := base + "/" + vars["id"]
+        encodeQrPng(w, vars["id"])	
+}
+
+func encodeQrPng(w io.Writer, id string) {
+        url := base + "/" + id 
 	qrCode, _ := qr.Encode(url, qr.M, qr.Auto)
 	qrCode, _ = barcode.Scale(qrCode, 256, 256)
 	png.Encode(w, qrCode)
@@ -174,18 +179,17 @@ func serveItems(w http.ResponseWriter, r *http.Request) {
 				pdfcache[index] = parGenQrPdf(items)
 				indexstring := strconv.Itoa(index)
 				renderItemsQrsPage(w, indexstring)
-			case "getqrspdf":
-				mypdf := generateQrsPdf(items)
-				mypdf.WriteTo(w) //should catch error
+                        case "getqrszip":
+                                generateQrsZip(w, items)
 			}
 		}
 	}
 }
 
 func parGenQrPdf(items []trackedItem) chan bytes.Buffer {
-        pdfChan := make(chan bytes.Buffer)
-        go func() {pdfChan <- generateQrsPdf(items) }()
-        return pdfChan
+	pdfChan := make(chan bytes.Buffer)
+	go func() { pdfChan <- generateQrsPdf(items) }()
+	return pdfChan
 }
 
 var pdfcache = make(map[int]chan bytes.Buffer)
@@ -198,11 +202,20 @@ func serveCachedPdf(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	if pdfChan, exists := pdfcache[index]; exists {
-                pdfbytes := <-pdfChan
-                pdfbytes.WriteTo(w)
-                close(pdfChan)
+		pdfbytes := <-pdfChan
+		pdfbytes.WriteTo(w)
+		close(pdfChan)
 		delete(pdfcache, index)
 	}
+}
+
+func generateQrsZip(w http.ResponseWriter, items []trackedItem) {
+        zipWriter := zip.NewWriter(w)
+        for _, v := range items  {
+            pngWriter, _ := zipWriter.Create(v.Name+"-"+v.Id+".png")
+            encodeQrPng(pngWriter, v.Id)
+        }
+        zipWriter.Close() //errors to handle
 }
 
 // Route declaration
@@ -215,6 +228,7 @@ func router() *mux.Router {
 	r.HandleFunc("/new", createQr).Methods("POST")
 	r.HandleFunc("/qr", createQr).Methods("POST")
 	r.HandleFunc("/items", serveItems)
+	r.HandleFunc("/dl/qrcodes.zip", serveItems)
 	r.HandleFunc("/dl/{id}/qrcodes.pdf", serveCachedPdf)
 	r.HandleFunc("/qr", serveCreationPage)
 	r.HandleFunc("/qr/{id}", serveQr)
