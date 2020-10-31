@@ -1,6 +1,7 @@
 package main
 
 import (
+	. "github.com/DanielRHolland/qrep/models"
 	"html/template"
 	"log"
 	"net/http"
@@ -45,9 +46,9 @@ func thanksForReport(w http.ResponseWriter) {
 	}
 }
 
-func renderDashboard(w http.ResponseWriter, items []trackedItem) {
+func renderDashboard(w http.ResponseWriter, items []TrackedItemType) {
 	model := struct {
-		TrackedItems []trackedItem
+		TrackedItems []TrackedItemType
 	}{
 		TrackedItems: items,
 	}
@@ -57,7 +58,7 @@ func renderDashboard(w http.ResponseWriter, items []trackedItem) {
 	}
 }
 
-func renderQr(w http.ResponseWriter, item trackedItem) {
+func renderQr(w http.ResponseWriter, item TrackedItemType) {
 	err := templates.ExecuteTemplate(w, "qr_view.html", item)
 	checkError(err)
 
@@ -73,13 +74,13 @@ func renderCreationPage(w http.ResponseWriter) {
 	checkError(err)
 }
 
-func renderItemReportLog(w http.ResponseWriter, item trackedItem) {
+func renderItemReportLog(w http.ResponseWriter, item TrackedItemType) {
 	err := templates.ExecuteTemplate(w, "item_report_log_page.html", item)
 	checkError(err)
 
 }
 
-func renderReportLog(w http.ResponseWriter, trackedItems []trackedItem) {
+func renderReportLog(w http.ResponseWriter, trackedItems []TrackedItemType) {
 	err := templates.ExecuteTemplate(w, "report_log_page.html", trackedItems)
 	checkError(err)
 }

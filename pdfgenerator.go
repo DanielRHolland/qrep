@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	. "github.com/DanielRHolland/qrep/models"
 	"github.com/johnfercher/maroto/pkg/consts"
 	"github.com/johnfercher/maroto/pkg/pdf"
 	"github.com/johnfercher/maroto/pkg/props"
@@ -11,7 +12,7 @@ import (
 	"time"
 )
 
-func generateQrsPdf(items []trackedItem) bytes.Buffer {
+func generateQrsPdf(items []TrackedItemType, baseurl string) bytes.Buffer {
 	begin := time.Now()
 
 	m := pdf.NewMaroto(consts.Portrait, consts.A4)
@@ -26,7 +27,7 @@ func generateQrsPdf(items []trackedItem) bytes.Buffer {
 					log.Println(index, item)
 					m.Col(2, func() {
 
-						m.QrCode(base+"/"+item.Id, props.Rect{
+						m.QrCode(baseurl+"/"+item.Id, props.Rect{
 							Left:    5,
 							Top:     5,
 							Center:  false,
@@ -35,9 +36,9 @@ func generateQrsPdf(items []trackedItem) bytes.Buffer {
 					})
 					m.Col(2, func() {
 						m.Text(item.Name, props.Text{
-							Top:   5,
-                                                        VerticalPadding: 5.0,
-                                                        Align: consts.Center,
+							Top:             5,
+							VerticalPadding: 5.0,
+							Align:           consts.Center,
 						})
 					})
 
