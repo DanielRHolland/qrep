@@ -33,39 +33,6 @@ func NewMongoDbConnection()  *MongoDbAccessor {
         return &MongoDbAccessor{client, ctx, trackeditems}
 }
 
-
-       // trackeditems := client.Database(dbname).Collection(itemsCollection)
-/*
-func (m *MongoDbAccessor) openCollection() (context.Context, *mongo.Collection) {
-    client *mongo.Client
-    
-	ctx := context.Background()
-        err := m.client.Connect(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-        return ctx
-        return client.Database(m.dbname).Collection(m.itemsCollection)
-}*/
-
-
-/*
-func connect() (context.Context, *mongo.Client) {
-	ctx  := context.Background()
-	client, err := mongo.Connect(ctx,options.Client().ApplyURI(mongodbURI))
-	if err != nil {
-		log.Fatal(err)
-	}
-        return ctx, client
-}
-func (m *MongoDbAccessor) Connect() context.Context {
-        ctx := context.Background()
-        err := m.client.Connect(ctx)
-        if err != nil {
-                  log.Fatal(err)
-        }
-        return ctx
-}*/
 func (m *MongoDbAccessor) Disconnect() {m.client.Disconnect(m.ctx)}
 
 

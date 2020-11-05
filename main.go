@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"flag"
@@ -16,18 +17,53 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "Hello, world!\n")
+type appContext struct {
+	addr          string
+	base          string
+	db            dbw.DbAccessor
+	tokenUsers    map[string]string
+	userPasswords map[string]string
 }
 
-type appContext struct {
-	addr string
-	base string
-	db   dbw.DbAccessor
+func newAppContext(addr string, base string, usersFile string, dbConnection dbw.DbAccessor) *appContext {
+	if base == "" {
+		base = "http://" + addr
+	}
+	return &appContext{
+		addr:          addr,
+		base:          base,
+		db:            dbConnection,
+		tokenUsers:    make(map[string]string),
+		userPasswords: *loadUsers(usersFile),
+	}
+}
+
+//Placeholder for more sophisticated auth system
+func loadUsers(filename string) *map[string]string {
+	if filename == "" {
+		return &map[string]string{"admin": "admin"}
+	} else {
+		readFile, err := os.Open(filename)
+		if err != nil {
+			log.Fatal("Could not read users file: ", filename)
+		}
+		result := make(map[string]string)
+
+		fileScanner := bufio.NewScanner(readFile)
+		fileScanner.Split(bufio.ScanLines)
+		for fileScanner.Scan() {
+			temp := strings.Split(fileScanner.Text(), ",")
+			result[temp[0]] = temp[1]
+		}
+		readFile.Close()
+		return &result
+	}
 }
 
 //POST create new qrcode
@@ -208,6 +244,39 @@ func (ctx *appContext) removeItems(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "", 303)
 }
 
+func (ctx *appContext) login(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		renderLoginPage(w)
+	} else if r.Method == "POST" {
+		err := r.ParseForm()
+		checkError(err)
+		username := r.Form.Get("username")
+		password := r.Form.Get("password")
+		if ctx.checkUserPasswordValid(username, password) {
+			expire := time.Now().Add(30 * time.Minute)
+			token := "key"
+			cookie := http.Cookie{
+				Name:    "sessionToken",
+				Value:   token,
+				Expires: expire,
+			}
+			ctx.tokenUsers[token] = username
+			http.SetCookie(w, &cookie)
+			http.Redirect(w, r, "/", 303)
+		} else {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+		}
+	} else {
+		http.Error(w, "Method not found", http.StatusNotFound)
+	}
+}
+
+func (ctx *appContext) checkUserPasswordValid(username string, password string) bool {
+	//TODO implement properly
+	pw, exists := ctx.userPasswords[username]
+	return exists && pw == password
+}
+
 // Route declaration
 func (ctx *appContext) router() *mux.Router {
 	r := mux.NewRouter()
@@ -215,6 +284,7 @@ func (ctx *appContext) router() *mux.Router {
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticServer))
 	s := r.PathPrefix("").Subrouter() //.Headers("X-Session-Token").Subrouter()
 	ctx.secureZoneSubRouter(s)
+	r.HandleFunc("/login", ctx.login)
 	r.HandleFunc("/{id}", ctx.newReportPosted).Methods("POST")
 	r.HandleFunc("/{id}", serveReportingPage)
 	r.Use(loggingMiddleware)
@@ -222,7 +292,7 @@ func (ctx *appContext) router() *mux.Router {
 }
 
 func (ctx *appContext) secureZoneSubRouter(r *mux.Router) { //TODO better name
-	//TODO Add auth middleware
+	r.Use(ctx.Middleware)
 	r.HandleFunc("/", ctx.serveDashboard)
 	r.HandleFunc("/issue/{id}", ctx.updateIssue).Methods("PUT")
 	r.HandleFunc("/new", ctx.createQr).Methods("POST")
@@ -239,11 +309,38 @@ func (ctx *appContext) secureZoneSubRouter(r *mux.Router) { //TODO better name
 	r.HandleFunc("/reports", ctx.serveReportLog)
 }
 
+// Middleware function, which will be called for each request
+func (ctx *appContext) Middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("X-Session-Token")
+		if token == "" {
+			tokens := r.URL.Query()["api"]
+			if len(tokens) > 0 {
+				token = tokens[0]
+			} else {
+				cookie, err := r.Cookie("sessionToken")
+				if err == nil {
+					token = cookie.Value
+				}
+			}
+		}
+		if user, found := ctx.tokenUsers[token]; found {
+			// We found the token in our map
+			log.Printf("Authenticated user %s\n", user)
+			// Pass down the request to the next middleware (or final handler)
+			next.ServeHTTP(w, r)
+		} else {
+			// Write an error and stop the handler chain
+			//	http.Error(w, "Forbidden", http.StatusForbidden)
+			//ctx.login(w, r)
+			http.Redirect(w, r, "login", 303)
+		}
+	})
+}
+
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Do stuff here
 		log.Println(r.RequestURI)
-		// Call the next handler, which can be another middleware in the chain, or the final handler.
 		next.ServeHTTP(w, r)
 	})
 }
@@ -252,18 +349,16 @@ func loggingMiddleware(next http.Handler) http.Handler {
 func main() {
 	addr := flag.String("addr", "127.0.0.1:9100", "Server Address:port")
 	base := flag.String("url", "", "URL")
+	usersFile := flag.String("users", "", "File containing users and passwords")
 	flag.Parse()
 	dbConnection := dbw.NewMongoDbConnection()
 	defer dbConnection.Disconnect()
-	ctx := appContext{*addr, *base, dbConnection}
-	if ctx.base == "" {
-		ctx.base = "http://" + *addr
-	}
-	log.Println("Serving on ", ctx.base, "(", *addr, ")")
+	ctx := newAppContext(*addr, *base, *usersFile, dbConnection)
+	log.Println("Serving on ", ctx.base, "(", ctx.addr, ")")
 	router := ctx.router()
 	srv := &http.Server{
 		Handler:      router,
-		Addr:         *addr,
+		Addr:         ctx.addr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}

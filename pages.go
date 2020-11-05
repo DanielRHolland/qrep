@@ -85,6 +85,11 @@ func renderReportLog(w http.ResponseWriter, trackedItems []TrackedItemType) {
 	checkError(err)
 }
 
+func renderLoginPage(w http.ResponseWriter) {
+	err := templates.ExecuteTemplate(w, "login_page.html", struct{}{})
+	checkError(err)
+}
+
 func renderItemsQrsPage(w http.ResponseWriter, index string) {
 	err := templates.ExecuteTemplate(w, "items_qrs_page.html", index)
 	checkError(err)
