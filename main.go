@@ -2,7 +2,6 @@ package main
 
 import (
 	"archive/zip"
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"flag"
@@ -17,19 +16,15 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"os"
 	"strconv"
-	"strings"
 	"time"
-        "github.com/google/uuid"
 )
 
 type appContext struct {
-	addr          string
-	base          string
-	db            dbw.DbAccessor
-	tokenUsers    map[string]string
-	userPasswords map[string]string
+	addr string
+	base string
+	db   dbw.DbAccessor
+	auth authenticator
 }
 
 func newAppContext(addr string, base string, usersFile string, dbConnection dbw.DbAccessor) *appContext {
@@ -37,33 +32,10 @@ func newAppContext(addr string, base string, usersFile string, dbConnection dbw.
 		base = "http://" + addr
 	}
 	return &appContext{
-		addr:          addr,
-		base:          base,
-		db:            dbConnection,
-		tokenUsers:    make(map[string]string),
-		userPasswords: *loadUsers(usersFile),
-	}
-}
-
-//Placeholder for more sophisticated auth system
-func loadUsers(filename string) *map[string]string {
-	if filename == "" {
-		return &map[string]string{"admin": "admin"}
-	} else {
-		readFile, err := os.Open(filename)
-		if err != nil {
-			log.Fatal("Could not read users file: ", filename)
-		}
-		result := make(map[string]string)
-
-		fileScanner := bufio.NewScanner(readFile)
-		fileScanner.Split(bufio.ScanLines)
-		for fileScanner.Scan() {
-			temp := strings.Split(fileScanner.Text(), ",")
-			result[temp[0]] = temp[1]
-		}
-		readFile.Close()
-		return &result
+		addr: addr,
+		base: base,
+		db:   dbConnection,
+		auth: *newAuthFromFile(usersFile),
 	}
 }
 
@@ -253,15 +225,13 @@ func (ctx *appContext) login(w http.ResponseWriter, r *http.Request) {
 		checkError(err)
 		username := r.Form.Get("username")
 		password := r.Form.Get("password")
-		if ctx.checkUserPasswordValid(username, password) {
+		if token, valid := ctx.auth.validateUser(username, password); valid {
 			expire := time.Now().Add(30 * time.Minute)
-			token := uuid.New().String()
 			cookie := http.Cookie{
 				Name:    "sessionToken",
 				Value:   token,
 				Expires: expire,
 			}
-			ctx.tokenUsers[token] = username
 			http.SetCookie(w, &cookie)
 			http.Redirect(w, r, "/", 303)
 		} else {
@@ -270,12 +240,6 @@ func (ctx *appContext) login(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, "Method not found", http.StatusNotFound)
 	}
-}
-
-func (ctx *appContext) checkUserPasswordValid(username string, password string) bool {
-	//TODO implement properly
-	pw, exists := ctx.userPasswords[username]
-	return exists && pw == password
 }
 
 // Route declaration
@@ -293,7 +257,7 @@ func (ctx *appContext) router() *mux.Router {
 }
 
 func (ctx *appContext) secureZoneSubRouter(r *mux.Router) { //TODO better name
-	r.Use(ctx.Middleware)
+	r.Use(ctx.authMiddleware)
 	r.HandleFunc("/", ctx.serveDashboard)
 	r.HandleFunc("/issue/{id}", ctx.updateIssue).Methods("PUT")
 	r.HandleFunc("/new", ctx.createQr).Methods("POST")
@@ -311,30 +275,19 @@ func (ctx *appContext) secureZoneSubRouter(r *mux.Router) { //TODO better name
 }
 
 // Middleware function, which will be called for each request
-func (ctx *appContext) Middleware(next http.Handler) http.Handler {
+func (ctx *appContext) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := r.Header.Get("X-Session-Token")
-		if token == "" {
-			tokens := r.URL.Query()["api"]
-			if len(tokens) > 0 {
-				token = tokens[0]
-			} else {
-				cookie, err := r.Cookie("sessionToken")
-				if err == nil {
-					token = cookie.Value
-				}
-			}
-		}
-		if user, found := ctx.tokenUsers[token]; found {
-			// We found the token in our map
-			log.Printf("Authenticated user %s\n", user)
-			// Pass down the request to the next middleware (or final handler)
-			next.ServeHTTP(w, r)
-		} else {
-			// Write an error and stop the handler chain
-			//	http.Error(w, "Forbidden", http.StatusForbidden)
-			//ctx.login(w, r)
+		cookie, err := r.Cookie("sessionToken")
+		if err != nil {
 			http.Redirect(w, r, "login", 303)
+		} else {
+			token := cookie.Value
+			if user, found := ctx.auth.tokenValid(token); found {
+				log.Printf("Authenticated user %s\n", user)
+				next.ServeHTTP(w, r)
+			} else {
+				http.Redirect(w, r, "login", 303)
+			}
 		}
 	})
 }
