@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+        "github.com/google/uuid"
 )
 
 type appContext struct {
@@ -254,7 +255,7 @@ func (ctx *appContext) login(w http.ResponseWriter, r *http.Request) {
 		password := r.Form.Get("password")
 		if ctx.checkUserPasswordValid(username, password) {
 			expire := time.Now().Add(30 * time.Minute)
-			token := "key"
+			token := uuid.New().String()
 			cookie := http.Cookie{
 				Name:    "sessionToken",
 				Value:   token,
